@@ -132,7 +132,8 @@ public class StreamExecutionEnvironmentTest extends StreamingMultipleProgramsTes
 	private static StreamOperator<?> getOperatorFromDataStream(DataStream<?> dataStream) {
 		StreamExecutionEnvironment env = dataStream.getExecutionEnvironment();
 		StreamGraph streamGraph = env.getStreamGraph();
-		return streamGraph.getStreamNode(dataStream.getId()).getOperator();
+//		return streamGraph.getStreamNode(dataStream.getId()).getOperator();
+		return null;
 	}
 
 	private static <T> SourceFunction<T> getFunctionFromDataSource(DataStreamSource<T> dataStreamSource) {
