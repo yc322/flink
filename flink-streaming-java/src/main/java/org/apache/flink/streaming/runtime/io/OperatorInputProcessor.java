@@ -83,6 +83,9 @@ public class OperatorInputProcessor {
 	private final int[] edgeMapping;
 
 	private final DeserializationDelegate<StreamElement>[] deserializationDelegates;
+
+	private long[] watermarks;
+	private long lastEmittedWatermark;
 	private final StreamOperatorNG.Input<?>[] inputArray;
 
 
@@ -136,13 +139,11 @@ public class OperatorInputProcessor {
 			recordDeserializers[i] = new SpillingAdaptiveSpanningRecordDeserializer<>();
 		}
 
-//		watermarks1 = new long[numInputChannels1];
-//		Arrays.fill(watermarks1, Long.MIN_VALUE);
-//		lastEmittedWatermark1 = Long.MIN_VALUE;
-//
-//		watermarks2 = new long[numInputChannels2];
-//		Arrays.fill(watermarks2, Long.MIN_VALUE);
-//		lastEmittedWatermark2 = Long.MIN_VALUE;
+		watermarks = new long[inputGate.getNumberOfInputChannels()];
+		for (int i = 0; i < inputGate.getNumberOfInputChannels(); i++) {
+			watermarks[i] = Long.MIN_VALUE;
+		}
+		lastEmittedWatermark = Long.MIN_VALUE;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -166,10 +167,24 @@ public class OperatorInputProcessor {
 					StreamElement recordOrWatermark = deserializationDelegate.getInstance();
 
 					if (recordOrWatermark.isWatermark()) {
-//						handleWatermark(streamOperator, (Watermark) recordOrWatermark, currentChannel, lock);
+						long watermarkMillis = recordOrWatermark.asWatermark().getTimestamp();
+						if (watermarkMillis > watermarks[currentChannel]) {
+							watermarks[currentChannel] = watermarkMillis;
+							long newMinWatermark = Long.MAX_VALUE;
+							for (long watermark : watermarks) {
+								newMinWatermark = Math.min(watermark, newMinWatermark);
+							}
+							if (newMinWatermark > lastEmittedWatermark) {
+								lastEmittedWatermark = newMinWatermark;
+								synchronized (lock) {
+									for (StreamOperatorNG.Input<?> input: inputArray) {
+										input.processWatermark(new Watermark(lastEmittedWatermark));
+									}
+								}
+							}
+						}
 						continue;
-					}
-					else {
+					} else {
 						synchronized (lock) {
 							inputArray[inputNum].processElement((StreamRecord) recordOrWatermark.asRecord());
 						}
@@ -204,41 +219,6 @@ public class OperatorInputProcessor {
 			}
 		}
 	}
-
-//	private void handleWatermark(TwoInputStreamOperator<IN1, IN2, ?> operator, Watermark mark, int channelIndex, Object lock) throws Exception {
-//		if (channelIndex < numInputChannels1) {
-//			long watermarkMillis = mark.getTimestamp();
-//			if (watermarkMillis > watermarks1[channelIndex]) {
-//				watermarks1[channelIndex] = watermarkMillis;
-//				long newMinWatermark = Long.MAX_VALUE;
-//				for (long wm : watermarks1) {
-//					newMinWatermark = Math.min(wm, newMinWatermark);
-//				}
-//				if (newMinWatermark > lastEmittedWatermark1) {
-//					lastEmittedWatermark1 = newMinWatermark;
-//					synchronized (lock) {
-//						operator.processWatermark1(new Watermark(lastEmittedWatermark1));
-//					}
-//				}
-//			}
-//		} else {
-//			channelIndex = channelIndex - numInputChannels1;
-//			long watermarkMillis = mark.getTimestamp();
-//			if (watermarkMillis > watermarks2[channelIndex]) {
-//				watermarks2[channelIndex] = watermarkMillis;
-//				long newMinWatermark = Long.MAX_VALUE;
-//				for (long wm : watermarks2) {
-//					newMinWatermark = Math.min(wm, newMinWatermark);
-//				}
-//				if (newMinWatermark > lastEmittedWatermark2) {
-//					lastEmittedWatermark2 = newMinWatermark;
-//					synchronized (lock) {
-//						operator.processWatermark2(new Watermark(lastEmittedWatermark2));
-//					}
-//				}
-//			}
-//		}
-//	}
 
 	public void setReporter(AccumulatorRegistry.Reporter reporter) {
 		for (RecordDeserializer<?> deserializer : recordDeserializers) {

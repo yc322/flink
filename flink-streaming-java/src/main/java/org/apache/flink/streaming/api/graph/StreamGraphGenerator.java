@@ -27,7 +27,7 @@ import org.apache.flink.streaming.api.operators.StreamOperatorNG;
 import org.apache.flink.streaming.api.transformations.CoFeedbackTransformation;
 import org.apache.flink.streaming.api.transformations.FeedbackTransformation;
 import org.apache.flink.streaming.api.transformations.OneInputTransformation;
-import org.apache.flink.streaming.api.transformations.OperatorTransformation;
+import org.apache.flink.streaming.api.transformations.OperatorNGTransformation;
 import org.apache.flink.streaming.api.transformations.PartitionTransformation;
 import org.apache.flink.streaming.api.transformations.SelectTransformation;
 import org.apache.flink.streaming.api.transformations.SinkTransformation;
@@ -152,10 +152,10 @@ public class StreamGraphGenerator {
 		transform.getOutputType();
 
 		Collection<Integer> transformedIds;
-//		if (transform instanceof OneInputTransformation<?, ?>) {
-//			transformedIds = transformOnInputTransform((OneInputTransformation<?, ?>) transform);
-		if (transform instanceof OperatorTransformation<?>) {
-			transformedIds = transformOperator((OperatorTransformation<?>) transform);
+		if (transform instanceof OneInputTransformation<?, ?>) {
+			transformedIds = transformOneInputTransform((OneInputTransformation<?, ?>) transform);
+		} else if (transform instanceof OperatorNGTransformation<?>) {
+			transformedIds = transformOperator((OperatorNGTransformation<?>) transform);
 		} else if (transform instanceof TwoInputTransformation<?, ?, ?>) {
 			transformedIds = transformTwoInputTransform((TwoInputTransformation<?, ?, ?>) transform);
 		} else if (transform instanceof SourceTransformation<?>) {
@@ -474,13 +474,13 @@ public class StreamGraphGenerator {
 	}
 
 	/**
-	 * Transforms a {@link OperatorTransformation}.
+	 * Transforms a {@link OperatorNGTransformation}.
 	 *
 	 * <p>
 	 * This recusively transforms the inputs, creates a new {@code StreamNode} in the graph and
 	 * wires the inputs to this new node.
 	 */
-	private <OUT> Collection<Integer> transformOperator(OperatorTransformation<OUT> transform) {
+	private <OUT> Collection<Integer> transformOperator(OperatorNGTransformation<OUT> transform) {
 
 		Map<StreamOperatorNG.Input<?>, StreamTransformation<?>> inputs = transform.getInputs();
 		Map<StreamOperatorNG.Input<?>, Collection<Integer>> inputIds = new HashMap<>();
@@ -533,7 +533,14 @@ public class StreamGraphGenerator {
 	 * This recusively transforms the inputs, creates a new {@code StreamNode} in the graph and
 	 * wired the inputs to this new node.
 	 */
-	private <IN, OUT> Collection<Integer> transformOnInputTransform(OneInputTransformation<IN, OUT> transform) {
+	private <IN, OUT> Collection<Integer> transformOneInputTransform(OneInputTransformation<IN, OUT> transform) {
+
+		StreamTransformation<OUT> wrappingTransformation = transform.getWrappingTransformation();
+
+		if (wrappingTransformation != transform) {
+			System.out.println("WE HAVE A WRAPPER");
+			return transform(wrappingTransformation);
+		}
 
 		Collection<Integer> inputIds = transform(transform.getInput());
 

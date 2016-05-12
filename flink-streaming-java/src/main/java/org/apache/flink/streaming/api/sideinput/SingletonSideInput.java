@@ -15,32 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.api.transformations;
+package org.apache.flink.streaming.api.sideinput;
 
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.streaming.api.sideinput.SideInput;
+import org.apache.flink.streaming.api.datastream.DataStream;
 
-import java.util.ArrayList;
-import java.util.List;
+public class SingletonSideInput<I, T> extends SideInput<I, T> {
 
-public abstract class OperatorTransformation<OUT> extends StreamTransformation<OUT> {
-	private final List<SideInput<?, ?>> sideInputs;
-
-	public OperatorTransformation(String name,
-			TypeInformation<OUT> outputType,
-			int parallelism) {
-		super(name, outputType, parallelism);
-
-		sideInputs = new ArrayList<>();
-	}
-
-	public abstract StreamTransformation<OUT> getWrappingTransformation();
-
-	public final <IN, S> void addSideInput(final SideInput<IN, S> sideInput) {
-		sideInputs.add(sideInput);
-	}
-
-	public List<SideInput<?, ?>> getSideInputs() {
-		return sideInputs;
+	public SingletonSideInput(DataStream<I> inputStream) {
+		super(inputStream);
 	}
 }

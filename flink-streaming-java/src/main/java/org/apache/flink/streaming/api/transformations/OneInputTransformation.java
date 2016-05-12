@@ -22,7 +22,10 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
+import org.apache.flink.streaming.api.operators.OneInputOperatorWrapper;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
+import org.apache.flink.streaming.api.operators.StreamOperatorNG;
+import org.apache.flink.streaming.api.sideinput.SideInput;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +39,7 @@ import java.util.List;
  * @param <OUT> The type of the elements that result from this {@code OneInputTransformation}
  */
 @Internal
-public class OneInputTransformation<IN, OUT> extends StreamTransformation<OUT> {
+public class OneInputTransformation<IN, OUT> extends OperatorTransformation<OUT> {
 
 	private final StreamTransformation<IN> input;
 
@@ -64,6 +67,25 @@ public class OneInputTransformation<IN, OUT> extends StreamTransformation<OUT> {
 		super(name, outputType, parallelism);
 		this.input = input;
 		this.operator = operator;
+	}
+
+	@Override
+	public StreamTransformation<OUT> getWrappingTransformation() {
+		if (getSideInputs().isEmpty()) {
+			return this;
+		} else {
+			OneInputOperatorWrapper<IN, OUT> wrapper = new OneInputOperatorWrapper<>(operator);
+
+			OperatorNGTransformation<OUT> wrapperTransform = new OperatorNGTransformation<>(getName(), wrapper, getOutputType(), getParallelism());
+
+			wrapperTransform.setInput(wrapper.getInput(), input);
+
+			for (SideInput<?, ?> sideInput: getSideInputs()) {
+				StreamOperatorNG.Input sideInputInput = wrapperTransform.getOperator().addSideInput(sideInput);
+				wrapperTransform.setInput(sideInputInput, sideInput.getInputStream().getTransformation());
+			}
+			return wrapperTransform;
+		}
 	}
 
 	/**

@@ -22,7 +22,9 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
+import org.apache.flink.streaming.api.operators.OneInputOperatorWrapper;
 import org.apache.flink.streaming.api.operators.TwoInputStreamOperator;
+import org.apache.flink.streaming.api.sideinput.SideInput;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +39,7 @@ import java.util.List;
  * @param <OUT> The type of the elements that result from this {@code TwoInputTransformation}
  */
 @Internal
-public class TwoInputTransformation<IN1, IN2, OUT> extends StreamTransformation<OUT> {
+public class TwoInputTransformation<IN1, IN2, OUT> extends OperatorTransformation<OUT> {
 
 	private final StreamTransformation<IN1> input1;
 	private final StreamTransformation<IN2> input2;
@@ -71,6 +73,15 @@ public class TwoInputTransformation<IN1, IN2, OUT> extends StreamTransformation<
 		this.input1 = input1;
 		this.input2 = input2;
 		this.operator = operator;
+	}
+
+	@Override
+	public StreamTransformation<OUT> getWrappingTransformation() {
+		if (getSideInputs().isEmpty()) {
+			return this;
+		} else {
+			throw new UnsupportedOperationException("Cannot have side inputs in two-input operator.");
+		}
 	}
 
 	/**

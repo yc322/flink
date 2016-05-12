@@ -22,6 +22,7 @@ import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.runtime.state.AbstractStateBackend;
 import org.apache.flink.streaming.api.graph.StreamConfig;
+import org.apache.flink.streaming.api.sideinput.SideInput;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.runtime.operators.Triggerable;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
@@ -30,7 +31,9 @@ import org.apache.flink.streaming.runtime.tasks.StreamTask;
 import org.apache.flink.streaming.runtime.tasks.StreamTaskState;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -71,7 +74,14 @@ public abstract class StreamOperatorNG<OUT> implements Serializable {
 	//  life cycle
 	// ------------------------------------------------------------------------
 
-	public abstract Collection<Input<?>> getInputs();
+	private final List<Input<?>> inputs = new ArrayList<>();
+
+	protected final void addInput(Input<?> input) {
+		inputs.add(input);
+	}
+	public final Collection<Input<?>> getInputs() {
+		return inputs;
+	}
 
 	/**
 	 * Initializes the operator. Sets access to the context and the output.
@@ -217,6 +227,28 @@ public abstract class StreamOperatorNG<OUT> implements Serializable {
 	 */
 	protected void registerTimer(long time, Triggerable target) {
 		container.registerTimer(time, target);
+	}
+
+	// ------------------------------------------------------------------------
+	//  Side inputs
+	// ------------------------------------------------------------------------
+
+	List<Object> sideInputSoFar = new ArrayList<>();
+	public final <IN, S> Input<IN> addSideInput(final SideInput<IN, S> sideInput) {
+		Input<IN> result = new Input<IN>() {
+			@Override
+			public void processElement(StreamRecord<IN> element) throws Exception {
+				sideInputSoFar.add(element.getValue());
+				System.out.println("RECEIVING SIDE INPUT FOR " + sideInput + ": " + element.getValue() + " SEEN: " + sideInputSoFar);
+			}
+
+			@Override
+			public void processWatermark(Watermark watermark) throws Exception {
+				System.out.println("WATERMARK: " + watermark);
+			}
+		};
+		addInput(result);
+		return result;
 	}
 
 	// ------------------------------------------------------------------------

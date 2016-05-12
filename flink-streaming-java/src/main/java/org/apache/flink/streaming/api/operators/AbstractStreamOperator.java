@@ -100,20 +100,20 @@ public abstract class AbstractStreamOperator<OUT>
 		this.container = containingTask;
 		this.config = config;
 		this.output = output;
-		this.runtimeContext = new StreamingRuntimeContext(this, container.getEnvironment(), container.getAccumulatorMap());
+//		this.runtimeContext = new StreamingRuntimeContext(this, container.getEnvironment(), container.getAccumulatorMap());
 
-		stateKeySelector1 = config.getStatePartitioner(0, getUserCodeClassloader());
-		stateKeySelector2 = config.getStatePartitioner(1, getUserCodeClassloader());
+//		stateKeySelector1 = config.getStatePartitioner(0, getUserCodeClassloader());
+//		stateKeySelector2 = config.getStatePartitioner(1, getUserCodeClassloader());
 
-		try {
-			TypeSerializer<Object> keySerializer = config.getStateKeySerializer(getUserCodeClassloader());
-			// if the keySerializer is null we still need to create the state backend
-			// for the non-partitioned state features it provides, such as the state output streams
-			String operatorIdentifier = getClass().getSimpleName() + "_" + config.getVertexID() + "_" + runtimeContext.getIndexOfThisSubtask();
-			stateBackend = container.createStateBackend(operatorIdentifier, keySerializer);
-		} catch (Exception e) {
-			throw new RuntimeException("Could not initialize state backend. ", e);
-		}
+//		try {
+//			TypeSerializer<Object> keySerializer = config.getStateKeySerializer(getUserCodeClassloader());
+//			// if the keySerializer is null we still need to create the state backend
+//			// for the non-partitioned state features it provides, such as the state output streams
+//			String operatorIdentifier = getClass().getSimpleName() + "_" + config.getVertexID() + "_" + runtimeContext.getIndexOfThisSubtask();
+//			stateBackend = container.createStateBackend(operatorIdentifier, keySerializer);
+//		} catch (Exception e) {
+//			throw new RuntimeException("Could not initialize state backend. ", e);
+//		}
 	}
 
 	/**

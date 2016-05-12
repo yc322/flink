@@ -173,6 +173,7 @@ public abstract class StreamTask<OUT, Operator extends StreamOperator<OUT>>
 	
 	@Override
 	public final void invoke() throws Exception {
+		getEnvironment()
 
 		boolean disposed = false;
 		try {

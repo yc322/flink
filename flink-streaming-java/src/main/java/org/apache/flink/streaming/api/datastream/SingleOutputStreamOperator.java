@@ -25,8 +25,11 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.TypeInfoParser;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
+import org.apache.flink.streaming.api.operators.StreamOperatorNG;
+import org.apache.flink.streaming.api.sideinput.SideInput;
+import org.apache.flink.streaming.api.transformations.OperatorNGTransformation;
+import org.apache.flink.streaming.api.transformations.OperatorTransformation;
 import org.apache.flink.streaming.api.transformations.PartitionTransformation;
-import org.apache.flink.streaming.api.transformations.StreamTransformation;
 import org.apache.flink.streaming.runtime.partitioner.StreamPartitioner;
 
 import static java.util.Objects.requireNonNull;
@@ -40,8 +43,11 @@ import static java.util.Objects.requireNonNull;
 @Public
 public class SingleOutputStreamOperator<T> extends DataStream<T> {
 
-	protected SingleOutputStreamOperator(StreamExecutionEnvironment environment, StreamTransformation<T> transformation) {
+	private final OperatorTransformation<T> operatorTransformation;
+
+	protected SingleOutputStreamOperator(StreamExecutionEnvironment environment, OperatorTransformation<T> transformation) {
 		super(environment, transformation);
+		this.operatorTransformation = transformation;
 	}
 
 	/**
@@ -276,6 +282,15 @@ public class SingleOutputStreamOperator<T> extends DataStream<T> {
 		}
 		return returns(TypeInfoParser.<T>parse(typeInfoString));
 	}
+
+	// ------------------------------------------------------------------------
+	//  Side inputs
+	// ------------------------------------------------------------------------
+
+	public final <IN, S> SingleOutputStreamOperator<T> addSideInput(final SideInput<IN, S> sideInput) {
+		operatorTransformation.addSideInput(sideInput);
+		return this;
+	}
 	
 	// ------------------------------------------------------------------------
 	//  Miscellaneous
@@ -283,7 +298,7 @@ public class SingleOutputStreamOperator<T> extends DataStream<T> {
 
 	@Override
 	protected DataStream<T> setConnectionType(StreamPartitioner<T> partitioner) {
-		return new SingleOutputStreamOperator<>(this.getExecutionEnvironment(), new PartitionTransformation<>(this.getTransformation(), partitioner));
+		return new DataStream<>(this.getExecutionEnvironment(), new PartitionTransformation<>(this.getTransformation(), partitioner));
 	}
 
 	/**

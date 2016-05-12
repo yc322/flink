@@ -61,7 +61,6 @@ import org.apache.flink.streaming.api.operators.StreamFlatMap;
 import org.apache.flink.streaming.api.operators.StreamMap;
 import org.apache.flink.streaming.api.operators.StreamSink;
 import org.apache.flink.streaming.api.transformations.OneInputTransformation;
-import org.apache.flink.streaming.api.transformations.OperatorTransformation;
 import org.apache.flink.streaming.api.transformations.PartitionTransformation;
 import org.apache.flink.streaming.api.transformations.StreamTransformation;
 import org.apache.flink.streaming.api.transformations.UnionTransformation;
@@ -501,29 +500,12 @@ public class DataStream<T> {
 	 *            output type
 	 * @return The transformed {@link DataStream}.
 	 */
-	public <R> SingleOutputStreamOperator<R> map(final MapFunction<T, R> mapper) {
+	public <R> SingleOutputStreamOperator<R> map(MapFunction<T, R> mapper) {
 
 		TypeInformation<R> outType = TypeExtractor.getMapReturnTypes(clean(mapper), getType(),
 				Utils.getCallLocationName(), true);
 
-		// read the output type of the input Transform to coax out errors about MissingTypeInfo
-		transformation.getOutputType();
-
-		StreamMap.Unkeyed<T, R> mapOp = new StreamMap.Unkeyed<>(mapper);
-
-		OperatorTransformation<R> resultTransform = new OperatorTransformation<>("Map",
-				mapOp,
-				outType,
-				environment.getParallelism());
-
-		resultTransform.setInput(mapOp.input, transformation);
-
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		SingleOutputStreamOperator<R> returnStream = new SingleOutputStreamOperator(environment, resultTransform);
-
-		getExecutionEnvironment().addOperator(resultTransform);
-
-		return returnStream;
+		return transform("Map", outType, new StreamMap<>(clean(mapper)));
 	}
 
 	/**

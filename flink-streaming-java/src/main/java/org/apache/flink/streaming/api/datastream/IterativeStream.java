@@ -35,7 +35,7 @@ import java.util.Collection;
  * @param <T> Type of the elements in this Stream
  */
 @PublicEvolving
-public class IterativeStream<T> extends SingleOutputStreamOperator<T> {
+public class IterativeStream<T> extends DataStream<T> {
 
 	// We store these so that we can create a co-iteration if we need to
 	private DataStream<T> originalInput;
@@ -46,7 +46,7 @@ public class IterativeStream<T> extends SingleOutputStreamOperator<T> {
 				new FeedbackTransformation<>(dataStream.getTransformation(), maxWaitTime));
 		this.originalInput = dataStream;
 		this.maxWaitTime = maxWaitTime;
-		setBufferTimeout(dataStream.environment.getBufferTimeout());
+//		setBufferTimeout(dataStream.environment.getBufferTimeout());
 	}
 
 	/**
