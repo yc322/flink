@@ -104,7 +104,7 @@ elif [ "$1" == "master" ]; then
 
     kadmin -p ${KERBEROS_ADMIN} -w ${KERBEROS_ADMIN_PASSWORD} -q "addprinc -pw hadoop-user hadoop-user@${KRB_REALM}"
     kadmin -p ${KERBEROS_ADMIN} -w ${KERBEROS_ADMIN_PASSWORD} -q "xst -k /home/hadoop-user/hadoop-user.keytab hadoop-user"
-    chown hadoop-user:hadoop-user /home/hadoop-user/hadoop-user
+    chown hadoop-user:hadoop-user /home/hadoop-user/hadoop-user.keytab
 
     kinit -kt /root/root.keytab root
 
