@@ -22,13 +22,9 @@
 # With bits and pieces added from Lewuathe/docker-hadoop-cluster to extend it to start a proper kerberized Hadoop cluster:
 #   * Lewuathe/docker-hadoop-cluster <https://github.com/Lewuathe/docker-hadoop-cluster>
 #
-# Author: Aljoscha Krettek
-# Date:   2018 May, 15
-#
 # Creates multi-node, kerberized Hadoop cluster on Docker
 
 FROM sequenceiq/pam:ubuntu-14.04
-MAINTAINER aljoscha
 
 RUN set -x \
     && addgroup hadoop \
