@@ -24,7 +24,7 @@ FLINK_TARBALL_DIR=$TEST_DATA_DIR
 FLINK_TARBALL=flink.tar.gz
 FLINK_DIRNAME=$(basename $FLINK_DIR)
 
-MAX_RETRY_SECONDS=400
+MAX_RETRY_SECONDS=800
 
 echo "Flink Tarball directory $FLINK_TARBALL_DIR"
 echo "Flink tarball filename $FLINK_TARBALL"
