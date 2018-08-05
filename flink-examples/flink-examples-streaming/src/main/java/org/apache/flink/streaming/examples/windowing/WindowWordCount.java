@@ -17,12 +17,18 @@
 
 package org.apache.flink.streaming.examples.windowing;
 
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.typeutils.base.StringSerializer;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.sources.NaiveCollectionSource;
 import org.apache.flink.streaming.examples.wordcount.WordCount;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
+import org.apache.flink.util.Collector;
+
+import java.util.ArrayList;
 
 /**
  * Implements a windowed version of the streaming "WordCount" program.
@@ -48,47 +54,29 @@ public class WindowWordCount {
 
 	public static void main(String[] args) throws Exception {
 
-		final ParameterTool params = ParameterTool.fromArgs(args);
-
-		// set up the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		// get input data
-		DataStream<String> text;
-		if (params.has("input")) {
-			// read the text file from given input path
-			text = env.readTextFile(params.get("input"));
-		} else {
-			System.out.println("Executing WindowWordCount example with default input data set.");
-			System.out.println("Use --input to specify file input.");
-			// get default test text data
-			text = env.fromElements(WordCountData.WORDS);
-		}
+		ArrayList<String> elements = new ArrayList<>();
+		elements.add("bella");
+		elements.add("ciao");
+		elements.add("bella");
+		elements.add("ciao");
+		elements.add("bella");
+		elements.add("ciao");
+		elements.add("ciao");
+		elements.add("ciao");
 
-		// make parameters available in the web interface
-		env.getConfig().setGlobalJobParameters(params);
+		DataStream<String> stringDataStream = env.addSource(new NaiveCollectionSource<>(
+				StringSerializer.INSTANCE,
+				elements));
 
-		final int windowSize = params.getInt("window", 10);
-		final int slideSize = params.getInt("slide", 5);
+		stringDataStream.flatMap(new FlatMapFunction<String, String>() {
+			@Override
+			public void flatMap(String value, Collector<String> out) throws Exception {
+				System.out.println("GOT: " + value);
+			}
+		});
 
-		DataStream<Tuple2<String, Integer>> counts =
-		// split up the lines in pairs (2-tuples) containing: (word,1)
-		text.flatMap(new WordCount.Tokenizer())
-				// create windows of windowSize records slided every slideSize records
-				.keyBy(0)
-				.countWindow(windowSize, slideSize)
-				// group by the tuple field "0" and sum up tuple field "1"
-				.sum(1);
-
-		// emit result
-		if (params.has("output")) {
-			counts.writeAsText(params.get("output"));
-		} else {
-			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.print();
-		}
-
-		// execute program
-		env.execute("WindowWordCount");
+		env.execute();
 	}
 }

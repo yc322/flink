@@ -33,6 +33,7 @@ import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.java.ClosureCleaner;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.TextInputFormat;
@@ -75,6 +76,9 @@ import org.apache.flink.streaming.api.graph.StreamGraph;
 import org.apache.flink.streaming.api.graph.StreamGraphGenerator;
 import org.apache.flink.streaming.api.operators.StoppableStreamSource;
 import org.apache.flink.streaming.api.operators.StreamSource;
+import org.apache.flink.streaming.api.sources.Source;
+import org.apache.flink.streaming.api.sources.runtime.SourceEnumeratorAdaptor;
+import org.apache.flink.streaming.api.sources.runtime.SourceSplitReader;
 import org.apache.flink.streaming.api.transformations.StreamTransformation;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.SplittableIterator;
@@ -1398,6 +1402,19 @@ public abstract class StreamExecutionEnvironment {
 		return addSource(function, "Custom Source");
 	}
 
+	public <T, SplitT, CheckpointT> DataStream<T> addSource(Source<T, SplitT, CheckpointT> source) {
+		DataStreamSource<SplitT> splitSource =
+				this.addSource(new SourceEnumeratorAdaptor<>(source));
+
+		splitSource.returns(new WrappingTypeInfo<>(source.getSplitSerializer()));
+
+		return splitSource
+				.transform(
+						"source-split-reader",
+						new WrappingTypeInfo<>(source.getElementSerializer()),
+						new SourceSplitReader<>(source));
+	}
+
 	/**
 	 * Ads a data source with a custom type information thus opening a
 	 * {@link DataStream}. Only in very special cases does the user need to
@@ -1836,5 +1853,68 @@ public abstract class StreamExecutionEnvironment {
 	 */
 	public void registerCachedFile(String filePath, String name, boolean executable) {
 		this.cacheFile.add(new Tuple2<>(name, new DistributedCache.DistributedCacheEntry(filePath, executable)));
+	}
+
+	private static class WrappingTypeInfo<T> extends TypeInformation<T> {
+		private final TypeSerializer<T> serializer;
+
+		public WrappingTypeInfo(TypeSerializer<T> serializer) {
+			this.serializer = serializer;
+		}
+
+		@Override
+		public boolean isBasicType() {
+			return false;
+		}
+
+		@Override
+		public boolean isTupleType() {
+			return false;
+		}
+
+		@Override
+		public int getArity() {
+			return 0;
+		}
+
+		@Override
+		public int getTotalFields() {
+			return 0;
+		}
+
+		@Override
+		public Class<T> getTypeClass() {
+			return null;
+		}
+
+		@Override
+		public boolean isKeyType() {
+			return false;
+		}
+
+		@Override
+		public TypeSerializer<T> createSerializer(ExecutionConfig config) {
+			return serializer;
+		}
+
+		@Override
+		public String toString() {
+			return null;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return 0;
+		}
+
+		@Override
+		public boolean canEqual(Object obj) {
+			return false;
+		}
 	}
 }
