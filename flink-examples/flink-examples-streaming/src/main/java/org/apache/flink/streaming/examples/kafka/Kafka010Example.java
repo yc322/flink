@@ -70,11 +70,11 @@ public class Kafka010Example {
 
 		DataStream<KafkaEvent> input = env
 				.addSource(
-					new FlinkKafkaConsumer010<>(
-						parameterTool.getRequired("input-topic"),
-						new KafkaEventSchema(),
-						parameterTool.getProperties())
-					.assignTimestampsAndWatermarks(new CustomWatermarkExtractor()))
+						new FlinkKafkaConsumer010<>(
+								parameterTool.getRequired("input-topic"),
+								new KafkaEventSchema(),
+								parameterTool.getProperties())
+								.assignTimestampsAndWatermarks(new CustomWatermarkExtractor()))
 				.keyBy("word")
 				.map(new RollingAdditionMapper());
 
