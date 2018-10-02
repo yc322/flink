@@ -43,7 +43,7 @@ class GroupCombineITCase(mode: TestExecutionMode) extends MultipleProgramsTestBa
       .map(str => Tuple1(str))
 
     // all methods on DataSet
-    ds.combineGroup(new ScalaGroupCombineFunctionExample())
+    ds.combineGroupJ(new ScalaGroupCombineFunctionExample())
       .output(new DiscardingOutputFormat[Tuple1[String]])
 
     ds.combineGroup((in, out: Collector[Tuple1[String]]) => in.toSet foreach (out.collect))
@@ -51,7 +51,7 @@ class GroupCombineITCase(mode: TestExecutionMode) extends MultipleProgramsTestBa
 
     // all methods on UnsortedGrouping
     ds.groupBy(0)
-      .combineGroup(new ScalaGroupCombineFunctionExample())
+      .combineGroupJ(new ScalaGroupCombineFunctionExample())
       .output(new DiscardingOutputFormat[Tuple1[String]])
 
     ds.groupBy(0)
@@ -60,7 +60,7 @@ class GroupCombineITCase(mode: TestExecutionMode) extends MultipleProgramsTestBa
 
     // all methods on SortedGrouping
     ds.groupBy(0).sortGroup(0, Order.ASCENDING)
-      .combineGroup(new ScalaGroupCombineFunctionExample())
+      .combineGroupJ(new ScalaGroupCombineFunctionExample())
       .output(new DiscardingOutputFormat[Tuple1[String]])
 
     ds.groupBy(0).sortGroup(0, Order.ASCENDING)

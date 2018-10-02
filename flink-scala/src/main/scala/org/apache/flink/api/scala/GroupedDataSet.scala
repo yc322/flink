@@ -384,7 +384,7 @@ class GroupedDataSet[T: ClassTag](
    * of elements to the [[GroupReduceFunction]]. The function can output zero or more elements. The
    * concatenation of the emitted values will form the resulting [[DataSet]].
    */
-  def reduceGroup[R: TypeInformation: ClassTag](reducer: GroupReduceFunction[T, R]): DataSet[R] = {
+  def reduceGroupJ[R: TypeInformation: ClassTag](reducer: GroupReduceFunction[T, R]): DataSet[R] = {
     require(reducer != null, "GroupReduce function must not be null.")
     wrap(
       new GroupReduceOperator[T, R](maybeCreateSortedGrouping(),
@@ -434,7 +434,7 @@ class GroupedDataSet[T: ClassTag](
    *  arbitrary output type.
    */
   def combineGroup[R: TypeInformation: ClassTag](
-                                          fun: (Iterator[T], Collector[R]) => Unit): DataSet[R] = {
+      fun: (Iterator[T], Collector[R]) => Unit): DataSet[R] = {
     require(fun != null, "GroupCombine function must not be null.")
     val combiner = new GroupCombineFunction[T, R] {
       val cleanFun = set.clean(fun)
@@ -461,7 +461,7 @@ class GroupedDataSet[T: ClassTag](
    *  the same. The CombineFunction, on the other side, can have an
    *  arbitrary output type.
    */
-  def combineGroup[R: TypeInformation: ClassTag](
+  def combineGroupJ[R: TypeInformation: ClassTag](
       combiner: GroupCombineFunction[T, R]): DataSet[R] = {
     require(combiner != null, "GroupCombine function must not be null.")
     wrap(
@@ -477,6 +477,6 @@ class GroupedDataSet[T: ClassTag](
       throw new InvalidProgramException("Parameter n of first(n) must be at least 1.")
     }
     // Normally reduceGroup expects implicit parameters, supply them manually here.
-    reduceGroup(new FirstReducer[T](n))(set.getType, implicitly[ClassTag[T]])
+    reduceGroupJ(new FirstReducer[T](n))(set.getType, implicitly[ClassTag[T]])
   }
 }

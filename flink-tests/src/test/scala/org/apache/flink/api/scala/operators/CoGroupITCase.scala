@@ -146,7 +146,7 @@ class CoGroupITCase(mode: TestExecutionMode) extends MultipleProgramsTestBase(mo
     val intDs = CollectionDataSets.getIntDataSet(env)
     val ds = CollectionDataSets.get5TupleDataSet(env)
     val ds2 = CollectionDataSets.get5TupleDataSet(env)
-    val coGroupDs = ds.coGroup(ds2).where(0).equalTo(0).apply(
+    val coGroupDs = ds.coGroup(ds2).where(0).equalTo(0).applyJ(
       new RichCoGroupFunction[
         (Int, Long, Int, String, Long),
         (Int, Long, Int, String, Long),

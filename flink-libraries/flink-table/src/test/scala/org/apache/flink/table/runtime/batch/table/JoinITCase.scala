@@ -474,7 +474,7 @@ class JoinITCase(
   }
 
   private def addNullKey3Tuples(rows: DataSet[(Int, Long, String)]) = {
-    rows.mapPartition(
+    rows.mapPartitionJ(
       new MapPartitionFunction[(Int, Long, String), (Integer, Long, String)] {
 
         override def mapPartition(
@@ -492,7 +492,7 @@ class JoinITCase(
   }
 
   private def addNullKey5Tuples(rows: DataSet[(Int, Long, Int, String, Long)]) = {
-    rows.mapPartition(
+    rows.mapPartitionJ(
       new MapPartitionFunction[(Int, Long, Int, String, Long), (Integer, Long, Int, String, Long)] {
 
         override def mapPartition(

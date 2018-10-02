@@ -237,39 +237,6 @@ class AllWindowedStream[T, W <: Window](javaStream: JavaAllWStream[T, W]) {
     asScalaStream(javaStream.reduce(cleanedReducer, applyFunction, returnType))
   }
 
-  /**
-    * Applies the given window function to each window. The window function is called for each
-    * evaluation of the window for each key individually. The output of the window function is
-    * interpreted as a regular non-windowed stream.
-    *
-    * Arriving data is pre-aggregated using the given pre-aggregation reducer.
-    *
-    * @param preAggregator The reduce function that is used for pre-aggregation
-    * @param windowFunction The process window function.
-    * @return The data stream that is the result of applying the window function to the window.
-    */
-  @PublicEvolving
-  def reduce[R: TypeInformation](
-      preAggregator: (T, T) => T,
-      windowFunction: ProcessAllWindowFunction[T, R, W]): DataStream[R] = {
-
-    if (preAggregator == null) {
-      throw new NullPointerException("Reduce function must not be null.")
-    }
-    if (windowFunction == null) {
-      throw new NullPointerException("WindowApply function must not be null.")
-    }
-
-    val cleanReducer = clean(preAggregator)
-    val cleanWindowFunction = clean(windowFunction)
-
-    val reducer = new ScalaReduceFunction[T](cleanReducer)
-    val applyFunction = new ScalaProcessAllWindowFunctionWrapper[T, R, W](cleanWindowFunction)
-
-    val returnType: TypeInformation[R] = implicitly[TypeInformation[R]]
-    asScalaStream(javaStream.reduce(reducer, applyFunction, returnType))
-  }
-
   // --------------------------- aggregate() ----------------------------------
 
   /**
@@ -320,7 +287,7 @@ class AllWindowedStream[T, W <: Window](javaStream: JavaAllWStream[T, W]) {
     val accumulatorType: TypeInformation[ACC] = implicitly[TypeInformation[ACC]]
     val aggregationResultType: TypeInformation[V] = implicitly[TypeInformation[V]]
     val resultType: TypeInformation[R] = implicitly[TypeInformation[R]]
-    
+
     asScalaStream(javaStream.aggregate(
       cleanedPreAggregator, applyFunction,
       accumulatorType, aggregationResultType, resultType))
@@ -527,43 +494,6 @@ class AllWindowedStream[T, W <: Window](javaStream: JavaAllWStream[T, W]) {
 
     val folder = new ScalaFoldFunction[T, ACC](cleanFolder)
     val applyFunction = new ScalaAllWindowFunction[ACC, R, W](cleanWindowFunction)
-
-    val accType: TypeInformation[ACC] = implicitly[TypeInformation[ACC]]
-    val returnType: TypeInformation[R] = implicitly[TypeInformation[R]]
-    asScalaStream(javaStream.fold(initialValue, folder, applyFunction, accType, returnType))
-  }
-
-  /**
-    * Applies the given window function to each window. The window function is called for each
-    * evaluation of the window for each key individually. The output of the window function is
-    * interpreted as a regular non-windowed stream.
-    *
-    * Arriving data is pre-aggregated using the given pre-aggregation folder.
-    *
-    * @param initialValue Initial value of the fold
-    * @param preAggregator The reduce function that is used for pre-aggregation
-    * @param windowFunction The window function.
-    * @return The data stream that is the result of applying the window function to the window.
-    */
-  @deprecated("use [[aggregate()]] instead")
-  @PublicEvolving
-  def fold[ACC: TypeInformation, R: TypeInformation](
-      initialValue: ACC,
-      preAggregator: (ACC, T) => ACC,
-      windowFunction: ProcessAllWindowFunction[ACC, R, W]): DataStream[R] = {
-
-    if (preAggregator == null) {
-      throw new NullPointerException("Reduce function must not be null.")
-    }
-    if (windowFunction == null) {
-      throw new NullPointerException("WindowApply function must not be null.")
-    }
-
-    val cleanFolder = clean(preAggregator)
-    val cleanWindowFunction = clean(windowFunction)
-
-    val folder = new ScalaFoldFunction[T, ACC](cleanFolder)
-    val applyFunction = new ScalaProcessAllWindowFunctionWrapper[ACC, R, W](cleanWindowFunction)
 
     val accType: TypeInformation[ACC] = implicitly[TypeInformation[ACC]]
     val returnType: TypeInformation[R] = implicitly[TypeInformation[R]]

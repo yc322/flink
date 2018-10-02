@@ -177,7 +177,7 @@ class CoGroupedStreams[T1, T2](input1: DataStream[T1], input2: DataStream[T2]) {
               out.collect(cleanFun(left.iterator().asScala, right.iterator().asScala))
             }
           }
-          apply(coGrouper)
+          applyJ(coGrouper)
         }
 
         /**
@@ -196,14 +196,14 @@ class CoGroupedStreams[T1, T2](input1: DataStream[T1], input2: DataStream[T2]) {
               cleanFun(left.iterator.asScala, right.iterator.asScala, out)
             }
           }
-          apply(coGrouper)
+          applyJ(coGrouper)
         }
 
         /**
          * Completes the co-group operation with the user function that is executed
          * for windowed groups.
          */
-        def apply[T: TypeInformation](function: CoGroupFunction[T1, T2, T]): DataStream[T] = {
+        def applyJ[T: TypeInformation](function: CoGroupFunction[T1, T2, T]): DataStream[T] = {
 
           val coGroup = new JavaCoGroupedStreams[T1, T2](input1.javaStream, input2.javaStream)
 

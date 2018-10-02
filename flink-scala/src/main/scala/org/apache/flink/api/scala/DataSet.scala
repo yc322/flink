@@ -501,7 +501,7 @@ class DataSet[T: ClassTag](set: JavaDataSet[T]) {
    * requires no grouping of elements. To transform individual elements,
    * the use of [[map]] and [[flatMap]] is preferable.
    */
-  def mapPartition[R: TypeInformation: ClassTag](
+  def mapPartitionJ[R: TypeInformation: ClassTag](
       partitionMapper: MapPartitionFunction[T, R]): DataSet[R] = {
     if (partitionMapper == null) {
       throw new NullPointerException("MapPartition function must not be null.")
@@ -782,7 +782,7 @@ class DataSet[T: ClassTag](set: JavaDataSet[T]) {
    * The function can output zero or more elements using the [[Collector]]. The concatenation of the
    * emitted values will form the resulting [[DataSet]].
    */
-  def reduceGroup[R: TypeInformation: ClassTag](reducer: GroupReduceFunction[T, R]): DataSet[R] = {
+  def reduceGroupJ[R: TypeInformation: ClassTag](reducer: GroupReduceFunction[T, R]): DataSet[R] = {
     if (reducer == null) {
       throw new NullPointerException("GroupReduce function must not be null.")
     }
@@ -847,7 +847,7 @@ class DataSet[T: ClassTag](set: JavaDataSet[T]) {
    *  the same. The GroupCombineFunction, on the other side, can have an
    *  arbitrary output type.
    */
-  def combineGroup[R: TypeInformation: ClassTag](
+  def combineGroupJ[R: TypeInformation: ClassTag](
       combiner: GroupCombineFunction[T, R]): DataSet[R] = {
     if (combiner == null) {
       throw new NullPointerException("Combine function must not be null.")
@@ -953,7 +953,7 @@ class DataSet[T: ClassTag](set: JavaDataSet[T]) {
       throw new InvalidProgramException("Parameter n of first(n) must be at least 1.")
     }
     // Normally reduceGroup expects implicit parameters, supply them manually here.
-    reduceGroup(new FirstReducer[T](n))(javaSet.getType, implicitly[ClassTag[T]])
+    reduceGroupJ(new FirstReducer[T](n))(javaSet.getType, implicitly[ClassTag[T]])
   }
 
   // --------------------------------------------------------------------------------------------

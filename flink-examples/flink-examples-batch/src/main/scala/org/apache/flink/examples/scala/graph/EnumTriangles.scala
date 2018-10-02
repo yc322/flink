@@ -98,7 +98,7 @@ object EnumTriangles {
     
     val triangles = edgesById
             // build triads
-            .groupBy("v1").sortGroup("v2", Order.ASCENDING).reduceGroup(new TriadBuilder())
+            .groupBy("v1").sortGroup("v2", Order.ASCENDING).reduceGroupJ(new TriadBuilder())
             // filter triads
             .join(edgesById).where("v2", "v3").equalTo("v1", "v2") { (t, _) => t }
               .withForwardedFieldsFirst("*")

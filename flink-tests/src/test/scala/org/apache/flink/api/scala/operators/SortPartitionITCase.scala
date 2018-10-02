@@ -48,7 +48,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
     val result = ds
       .map { x => x }.setParallelism(4)
       .sortPartition(1, Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple3Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3Checker))
       .distinct()
       .collect()
 
@@ -67,7 +67,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
       .map { x => x }.setParallelism(2)
       .sortPartition(4, Order.ASCENDING)
         .sortPartition(2, Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple5Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple5Checker))
       .distinct()
       .collect()
 
@@ -85,7 +85,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
     val result = ds
       .map { x => x }.setParallelism(4)
       .sortPartition("_2", Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple3Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3Checker))
       .distinct()
       .collect()
 
@@ -104,7 +104,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
       .map { x => x }.setParallelism(2)
       .sortPartition("_5", Order.ASCENDING)
         .sortPartition("_3", Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple5Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple5Checker))
       .distinct()
       .collect()
 
@@ -123,7 +123,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
       .map { x => x }.setParallelism(3)
       .sortPartition("_1._2", Order.ASCENDING)
         .sortPartition("_2", Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new NestedTupleChecker))
+      .mapPartitionJ(new OrderCheckMapper(new NestedTupleChecker))
       .distinct()
       .collect()
 
@@ -142,7 +142,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
       .map { x => x }.setParallelism(3)
       .sortPartition("nestedTupleWithCustom._2.myString", Order.ASCENDING)
         .sortPartition("number", Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new PojoChecker))
+      .mapPartitionJ(new OrderCheckMapper(new PojoChecker))
       .distinct()
       .collect()
 
@@ -159,7 +159,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
 
     val result = ds
       .sortPartition(1, Order.DESCENDING).setParallelism(3)
-      .mapPartition(new OrderCheckMapper(new Tuple3Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3Checker))
       .distinct()
       .collect()
 
@@ -176,7 +176,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
     val result = ds
       .map { x => x }.setParallelism(4)
       .sortPartition(_._2, Order.ASCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple3AscendingChecker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3AscendingChecker))
       .distinct()
       .collect()
 
@@ -193,7 +193,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
     val result = ds
       .map { x => x }.setParallelism(4)
       .sortPartition(x => (x._2, x._1), Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple3Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3Checker))
       .distinct()
       .collect()
 
@@ -211,7 +211,7 @@ class SortPartitionITCase(mode: TestExecutionMode) extends MultipleProgramsTestB
       .map { x => x }.setParallelism(4)
       .sortPartition(x => (x._2, x._1), Order.DESCENDING)
       .sortPartition(0, Order.DESCENDING)
-      .mapPartition(new OrderCheckMapper(new Tuple3Checker))
+      .mapPartitionJ(new OrderCheckMapper(new Tuple3Checker))
       .distinct()
       .collect()
 

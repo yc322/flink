@@ -75,7 +75,7 @@ class CoGroupDataSet[L, R](
   private val groupSortOrdersSecond = mutable.MutableList[Order]()
   
   private var customPartitioner : Partitioner[_] = _
-  
+
   /**
    * Creates a new [[DataSet]] where the result for each pair of co-grouped element lists is the
    * result of the given function.
@@ -101,7 +101,7 @@ class CoGroupDataSet[L, R](
       customPartitioner,
       getCallLocationName())
 
-    
+
     wrap(coGroupOperator)
   }
 
@@ -142,7 +142,7 @@ class CoGroupDataSet[L, R](
    * A [[RichCoGroupFunction]] can be used to access the
    * broadcast variables and the [[org.apache.flink.api.common.functions.RuntimeContext]].
    */
-  def apply[O: TypeInformation: ClassTag](coGrouper: CoGroupFunction[L, R, O]): DataSet[O] = {
+  def applyJ[O: TypeInformation: ClassTag](coGrouper: CoGroupFunction[L, R, O]): DataSet[O] = {
     require(coGrouper != null, "CoGroup function must not be null.")
     val coGroupOperator = new CoGroupOperator[L, R, O](
       leftInput.javaSet,

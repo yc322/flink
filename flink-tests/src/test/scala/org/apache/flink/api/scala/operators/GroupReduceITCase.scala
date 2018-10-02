@@ -223,7 +223,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val env = ExecutionEnvironment.getExecutionEnvironment
     val intDs =  CollectionDataSets.getIntDataSet(env)
     val ds =  CollectionDataSets.get3TupleDataSet(env)
-    val reduceDs =  ds.groupBy(1).reduceGroup(
+    val reduceDs =  ds.groupBy(1).reduceGroupJ(
       new RichGroupReduceFunction[(Int, Long, String), (Int, Long, String)] {
         private var f2Replace = ""
 
@@ -302,7 +302,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val env = ExecutionEnvironment.getExecutionEnvironment
     val ds =  CollectionDataSets.getCustomTypeDataSet(env)
 
-    val reduceDs =  ds.groupBy(_.myInt).reduceGroup(new CustomTypeGroupReduceWithCombine())
+    val reduceDs =  ds.groupBy(_.myInt).reduceGroupJ(new CustomTypeGroupReduceWithCombine())
     
     val result: Seq[String] = reduceDs.collect().map(_.toString()).sorted
     
@@ -330,7 +330,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     env.setParallelism(2)
     val ds =  CollectionDataSets.get3TupleDataSet(env)
 
-    val reduceDs =  ds.groupBy(1).reduceGroup(new Tuple3GroupReduceWithCombine())
+    val reduceDs =  ds.groupBy(1).reduceGroupJ(new Tuple3GroupReduceWithCombine())
     
     val result: Seq[(Int, String)] = reduceDs.collect().sortBy(_._1)
     val expected = Seq[(Int, String)](
@@ -357,7 +357,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val cfg: Configuration = new Configuration
     cfg.setString(Optimizer.HINT_SHIP_STRATEGY, Optimizer.HINT_SHIP_STRATEGY_REPARTITION)
 
-    val reduceDs =  ds.reduceGroup(new Tuple3AllGroupReduceWithCombine).withParameters(cfg)
+    val reduceDs =  ds.reduceGroupJ(new Tuple3AllGroupReduceWithCombine).withParameters(cfg)
 
     val result: (Int, String) = reduceDs.collect().head
     val expected = (322,
@@ -435,7 +435,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     }
 
     val reduceDs =  ds.groupBy(1).sortGroup(0, Order.ASCENDING)
-      .reduceGroup(new OrderCheckingCombinableReduce())
+      .reduceGroupJ(new OrderCheckingCombinableReduce())
     
     
     val result: Seq[String] = reduceDs.collect().sortBy(_._1).map(x => s"${x._1},${x._2},${x._3}")
@@ -557,7 +557,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val ds =  CollectionDataSets.getGroupSortedNestedTupleDataSet(env)
     
     val reduceDs =  ds.groupBy("_2").sortGroup(0, Order.DESCENDING)
-      .reduceGroup(new NestedTupleReducer())
+      .reduceGroupJ(new NestedTupleReducer())
     
     val result: Seq[String] = reduceDs.map(_.toString()).collect().sorted
     val expected = Seq[String](
@@ -578,7 +578,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val reduceDs =  ds.groupBy("_2")
       .sortGroup("_1._1", Order.ASCENDING)
       .sortGroup("_1._2", Order.ASCENDING)
-      .reduceGroup(new NestedTupleReducer)
+      .reduceGroupJ(new NestedTupleReducer)
     
     val result: Seq[String] = reduceDs.map(_.toString).collect().sorted
     val expected = Seq[String](
@@ -600,7 +600,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val reduceDs =  ds.groupBy("_2")
       .sortGroup("_1._1", Order.DESCENDING)
       .sortGroup("_1._2", Order.ASCENDING)
-      .reduceGroup(new NestedTupleReducer)
+      .reduceGroupJ(new NestedTupleReducer)
     
     val result: Seq[String] = reduceDs.map(_.toString()).collect().sorted
     val expected = Seq[String](
@@ -621,7 +621,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val reduceDs =  ds.groupBy("_2")
       .sortGroup("_1._1", Order.DESCENDING)
       .sortGroup("_1._2", Order.DESCENDING)
-      .reduceGroup(new NestedTupleReducer())
+      .reduceGroupJ(new NestedTupleReducer())
     
     val result: Seq[String] = reduceDs.map(_.toString()).collect().sorted
     val expected = Seq[String] (
@@ -742,7 +742,7 @@ class GroupReduceITCase(mode: TestExecutionMode) extends MultipleProgramsTestBas
     val ds =  CollectionDataSets.get3TupleDataSet(env)
 
     val reduceDs =  ds.groupBy(_._2).sortGroup(_._3, Order.DESCENDING)
-      .reduceGroup(new Tuple3SortedGroupReduceWithCombine())
+      .reduceGroupJ(new Tuple3SortedGroupReduceWithCombine())
     
     val result : Seq[(Int, String)] = reduceDs.collect().sortBy(_._1)
     

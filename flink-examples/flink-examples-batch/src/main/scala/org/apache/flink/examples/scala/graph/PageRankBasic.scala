@@ -91,7 +91,7 @@ object PageRankBasic {
 
     // build adjacency list from link input
     val adjacencyLists = links
-      .groupBy("sourceId").reduceGroup( new GroupReduceFunction[Link, AdjacencyList] {
+      .groupBy("sourceId").reduceGroupJ( new GroupReduceFunction[Link, AdjacencyList] {
         override def reduce(values: Iterable[Link], out: Collector[AdjacencyList]): Unit = {
           var outputId = -1L
           val outputList = values.asScala map { t => outputId = t.sourceId; t.targetId }

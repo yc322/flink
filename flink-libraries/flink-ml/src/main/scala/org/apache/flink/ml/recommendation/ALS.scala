@@ -603,7 +603,7 @@ object ALS {
 
     // collect the partial update messages and calculate for each user block the new user vectors
     partialBlockMsgs.coGroup(userIn).where(0).equalTo(0).sortFirstGroup(1, Order.ASCENDING).
-      withPartitioner(blockIDPartitioner).apply{
+      withPartitioner(blockIDPartitioner).applyJ{
       new CoGroupFunction[(Int, Int, Array[Array[Double]]), (Int,
         InBlockInformation), (Int, Array[Array[Double]])](){
 
@@ -857,7 +857,7 @@ object ALS {
     // respect to the itemID, because later the item vectors of the update message are sorted
     // accordingly.
     val collectedPartialInfos = partialInInfos.groupBy(0, 1).sortGroup(2, Order.ASCENDING).
-      reduceGroup {
+      reduceGroupJ {
       new GroupReduceFunction[(Int, Int, Long, (Array[Long], Array[Double])), (Int,
         Int, Array[(Array[Long], Array[Double])])](){
         val buffer = new ArrayBuffer[(Array[Long], Array[Double])]
@@ -904,7 +904,7 @@ object ALS {
     // Aggregate all item block ratings with respect to their user block ID. Sort the blocks with
     // respect to their itemBlockID, because the block update messages are sorted the same way
     collectedPartialInfos.coGroup(usersPerBlock).where(0).equalTo(0).
-      sortFirstGroup(1, Order.ASCENDING).apply{
+      sortFirstGroup(1, Order.ASCENDING).applyJ{
       new CoGroupFunction[(Int, Int, Array[(Array[Long], Array[Double])]),
         (Int, Array[Long]), (Int, InBlockInformation)] {
         val buffer = ArrayBuffer[BlockRating]()
