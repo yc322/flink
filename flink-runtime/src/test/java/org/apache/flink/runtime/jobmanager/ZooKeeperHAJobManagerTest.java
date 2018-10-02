@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.util.Collection;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import scala.Option;
@@ -153,8 +154,13 @@ public class ZooKeeperHAJobManagerTest extends TestLogger {
 				Await.result(jobManager.ask(TestingJobManagerMessages.getWaitForBackgroundTasksToFinish(), TIMEOUT), TIMEOUT);
 
 				final SubmittedJobGraph recoveredJobGraph = akka.serialization.JavaSerializer.currentSystem().withValue(
-					((ExtendedActorSystem) system),
-					() -> otherSubmittedJobGraphStore.recoverJobGraph(jobId));
+						((ExtendedActorSystem) system),
+						new Callable<SubmittedJobGraph>() {
+							@Override
+							public SubmittedJobGraph call() throws Exception {
+								return otherSubmittedJobGraphStore.recoverJobGraph(jobId);
+							}
+						});
 
 				assertThat(recoveredJobGraph, is(notNullValue()));
 
