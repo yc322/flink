@@ -90,6 +90,22 @@ private[flink] abstract class UnfinishedKeyPairOperation[L, R, O](
     val leftKey = new Keys.SelectorFunctionKeys[L, K](keyExtractor, leftInput.getType, keyType)
     new HalfUnfinishedKeyPairOperation[L, R, O](this, leftKey)
   }
+
+  /**
+   * Specify the key selector function for the left side of the key based operation. This returns
+   * a [[HalfUnfinishedKeyPairOperation]] on which `equalTo` must be called to specify the
+   * key for the right side. The result after specifying the right side key is the finished
+   * operation.
+   */
+  def where[K: TypeInformation](fun: KeySelector[L, K]) = {
+    val keyType = implicitly[TypeInformation[K]]
+    val keyExtractor = new KeySelector[L, K] {
+      val cleanFun = leftInput.clean(fun)
+      def getKey(in: L) = cleanFun.getKey(in)
+    }
+    val leftKey = new Keys.SelectorFunctionKeys[L, K](keyExtractor, leftInput.getType, keyType)
+    new HalfUnfinishedKeyPairOperation[L, R, O](this, leftKey)
+  }
 }
 
 @Internal
@@ -135,6 +151,28 @@ private[flink] class HalfUnfinishedKeyPairOperation[L, R, O](
     val keyExtractor = new KeySelector[R, K] {
       val cleanFun = unfinished.leftInput.clean(fun)
       def getKey(in: R) = cleanFun(in)
+    }
+    val rightKey = new Keys.SelectorFunctionKeys[R, K](
+      keyExtractor,
+      unfinished.rightInput.getType,
+      keyType)
+
+    if (!leftKey.areCompatible(rightKey)) {
+      throw new InvalidProgramException("The types of the key fields do not match. Left: " +
+        leftKey + " Right: " + rightKey)
+    }
+    unfinished.finish(leftKey, rightKey)
+  }
+
+  /**
+   * Specify the key selector function for the right side of the key based operation. This returns
+   * the finished operation.
+   */
+  def equalTo[K: TypeInformation](fun: KeySelector[R, K]): O = {
+    val keyType = implicitly[TypeInformation[K]]
+    val keyExtractor = new KeySelector[R, K] {
+      val cleanFun = unfinished.leftInput.clean(fun)
+      def getKey(in: R) = cleanFun.getKey(in)
     }
     val rightKey = new Keys.SelectorFunctionKeys[R, K](
       keyExtractor,

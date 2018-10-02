@@ -415,6 +415,22 @@ class DataStream[T](stream: JavaStream[T]) {
   }
 
   /**
+   * Groups the elements of a DataStream by the given K key to
+   * be used with grouped operators like grouped reduce or grouped aggregations.
+   */
+  def keyBy[K: TypeInformation](fun: KeySelector[T, K]): KeyedStream[T, K] = {
+
+    val cleanFun = clean(fun)
+    val keyType: TypeInformation[K] = implicitly[TypeInformation[K]]
+
+    val keyExtractor = new KeySelector[T, K] with ResultTypeQueryable[K] {
+      def getKey(in: T) = cleanFun.getKey(in)
+      override def getProducedType: TypeInformation[K] = keyType
+    }
+    asScalaStream(new JavaKeyedStream(stream, keyExtractor, keyType))
+  }
+
+  /**
    * Partitions a tuple DataStream on the specified key fields using a custom partitioner.
    * This method takes the key position to partition on, and a partitioner that accepts the key
    * type.
