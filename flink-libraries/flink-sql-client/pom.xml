@@ -135,6 +135,16 @@ under the License.
 
 	<build>
 		<plugins>
+			<!-- We have to skip here because we hard-depend on Scala 2.11 dependencies, which
+			we don't allow in the root pom -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+
 			<!-- Build flink-sql-client jar -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
