@@ -135,6 +135,10 @@ under the License.
 					<artifactId>aircompressor</artifactId>
 				</exclusion>
 				<exclusion>
+					<groupId>io.airlift</groupId>
+					<artifactId>log-manager</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>javax.inject</groupId>
 					<artifactId>javax.inject</artifactId>
 				</exclusion>
